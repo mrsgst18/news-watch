@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>News Watch</title>
+  <title>OSINT News Watch</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -14,7 +14,7 @@
       --muted:rgba(255,255,255,.65);
       --good:#27d17b;
       --warn:#ffcc66;
-      --bad:#ff6b6b;
+      --bad:#ff3b3b;
       --shadow:0 16px 44px rgba(0,0,0,.55);
       --r:18px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
@@ -30,43 +30,62 @@
         radial-gradient(900px 700px at 50% 90%, rgba(40,209,124,.12), transparent 60%),
         var(--bg);
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:26px 18px 60px;}
-    header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px;}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 60px;}
+    header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px;}
     h1{margin:0;font-size:22px;letter-spacing:.2px}
-    p{margin:6px 0 0;color:var(--muted);max-width:75ch;line-height:1.35}
+    p{margin:6px 0 0;color:var(--muted);max-width:85ch;line-height:1.35}
     .tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     button{
       border:1px solid var(--stroke);
       background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
       color:var(--text);
-      padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:800;
+      padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:900;
       box-shadow:0 6px 18px rgba(0,0,0,.25);
     }
     button.secondary{background:transparent;box-shadow:none}
+    button.danger{border-color:rgba(255,59,59,.35); background:linear-gradient(180deg, rgba(255,59,59,.18), rgba(255,59,59,.08));}
     .pill{
       display:inline-flex;gap:8px;align-items:center;
       padding:10px 12px;border-radius:14px;border:1px solid var(--stroke);
       background:rgba(255,255,255,.05);color:var(--muted);font-size:13px;
     }
     .pill b{color:var(--text)}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px;}
-    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr;}}
-    .card{
+    .layout{display:grid;grid-template-columns:1fr;gap:14px;align-items:start;}
+    @media(min-width:980px){.layout{grid-template-columns:340px 1fr;}}
+    .panel{
       border:1px solid var(--stroke);
       background:linear-gradient(180deg, var(--panel), rgba(255,255,255,.03));
       border-radius:var(--r);
       box-shadow:var(--shadow);
       overflow:hidden;
     }
+    .panel .ph{padding:14px 14px 10px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .panel .ph h2{margin:0;font-size:14px;letter-spacing:.2px}
+    .panel .ph .sub{margin-top:6px;color:var(--muted);font-size:12.5px;line-height:1.35}
+    .panel .pc{padding:12px 14px 14px}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;}
+    @media(min-width:860px){.grid{grid-template-columns:1fr 1fr;}}
+    .card{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, var(--panel), rgba(255,255,255,.03));
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .card.alert{
+      border-color:rgba(255,59,59,.55);
+      box-shadow:0 18px 58px rgba(255,59,59,.18), var(--shadow);
+    }
     .head{
       display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
       padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08);
     }
-    .name{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.2px}
+    .name{display:flex;align-items:center;gap:10px;font-weight:1000;letter-spacing:.2px}
     .dot{width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.45);box-shadow:0 0 0 6px rgba(255,255,255,.04)}
     .dot.good{background:var(--good);box-shadow:0 0 0 6px rgba(39,209,123,.14)}
     .dot.warn{background:var(--warn);box-shadow:0 0 0 6px rgba(255,204,102,.14)}
-    .dot.bad{background:var(--bad);box-shadow:0 0 0 6px rgba(255,107,107,.14)}
+    .dot.bad{background:var(--bad);box-shadow:0 0 0 6px rgba(255,59,59,.14)}
     .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12.5px;margin-top:6px}
     .chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);padding:4px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
     .chip strong{color:var(--text)}
@@ -76,7 +95,7 @@
     .list{padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px;}
     .item{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.18);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
     .top{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
-    .item a{color:inherit;text-decoration:none;font-weight:800;line-height:1.25}
+    .item a{color:inherit;text-decoration:none;font-weight:850;line-height:1.25}
     .item a:hover{text-decoration:underline;text-decoration-thickness:2px}
     .date{color:var(--muted);font-size:12px;white-space:nowrap;font-family:var(--mono)}
     .hint{
@@ -84,14 +103,77 @@
       border:1px dashed rgba(255,255,255,.18);border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03)
     }
     .small{font-size:12px;color:var(--muted);line-height:1.45}
+    .alertbar{
+      display:none;
+      position:sticky; top:0; z-index:50;
+      margin:0 0 14px 0;
+      border:1px solid rgba(255,59,59,.55);
+      background:linear-gradient(180deg, rgba(255,59,59,.28), rgba(255,59,59,.10));
+      border-radius:16px;
+      padding:12px 12px;
+      box-shadow:0 18px 60px rgba(255,59,59,.22);
+    }
+    .alertbar.on{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .alertbar .left{display:flex;gap:10px;align-items:center}
+    .siren{
+      width:34px;height:34px;border-radius:12px;
+      background:rgba(255,59,59,.25);
+      border:1px solid rgba(255,59,59,.55);
+      display:grid;place-items:center;
+      box-shadow:0 0 0 10px rgba(255,59,59,.10);
+      animation:pulse 1.1s infinite ease-in-out;
+    }
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    .alertbar b{letter-spacing:.2px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    label{font-size:12.5px;color:var(--muted)}
+    input,select,textarea{
+      width:100%;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:var(--text);
+      padding:10px 10px;
+      border-radius:12px;
+      outline:none;
+      font-family:var(--sans);
+    }
+    textarea{min-height:70px; resize:vertical; font-family:var(--mono); font-size:12px; line-height:1.35}
+    .mini{font-size:12px;color:var(--muted)}
+    .sourcesList{display:flex;flex-direction:column;gap:10px}
+    .srcRow{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:10px;
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .srcTop{display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .srcName{font-weight:900}
+    .srcMeta{font-family:var(--mono);font-size:11.5px;color:var(--muted);word-break:break-all}
+    .srcBtns{display:flex;gap:8px;flex-wrap:wrap}
+    .srcBtns button{padding:8px 10px;border-radius:12px;font-weight:900}
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div id="alertbar" class="alertbar">
+      <div class="left">
+        <div class="siren">⚠️</div>
+        <div>
+          <div><b>ALLERTA:</b> trovate nuove pubblicazioni</div>
+          <div class="small" id="alerttext"></div>
+        </div>
+      </div>
+      <div class="tools">
+        <button id="btnMarkAll" class="danger" title="Salva baseline per tutte le fonti (segna tutto come letto)">Segna tutto come letto</button>
+        <button id="btnHideAlert" class="secondary">Nascondi banner</button>
+      </div>
+    </div>
+
     <header>
       <div>
-        <h1>News Watch</h1>
-        <p>Quando apri questa pagina, premi <b>Aggiorna</b>: ti segnala se una fonte ha pubblicato qualcosa di nuovo. Lo storico “ultimo visto” resta <b>in locale</b> nel tuo browser.</p>
+        <h1>OSINT News Watch</h1>
+        <p>Monitoraggio open source: controlla comunicati/press/news di ONG e fonti pubbliche. Premi <b>Aggiorna</b> per vedere se c’è qualcosa di nuovo. Lo storico “ultimo visto” resta <b>in locale</b> nel tuo browser.</p>
       </div>
       <div class="tools">
         <button id="btnRefresh">Aggiorna</button>
@@ -100,43 +182,99 @@
       </div>
     </header>
 
-    <div class="grid" id="grid"></div>
+    <div class="layout">
+      <div class="panel">
+        <div class="ph">
+          <div>
+            <h2>Fonti</h2>
+            <div class="sub">Puoi aggiungere fonti (meglio RSS quando disponibile). Le fonti vengono salvate in locale.</div>
+          </div>
+          <button id="btnAddPreset" class="secondary" title="Ripristina lista predefinita">Preset</button>
+        </div>
+        <div class="pc">
+          <div class="sourcesList" id="sourcesList"></div>
 
-    <div class="hint">
-      <div><b>Nota:</b> questa versione usa un proxy Cloudflare Workers per aggirare CORS.</div>
-      <div class="small" style="margin-top:6px;">Proxy: <span style="font-family:var(--mono)">https://news-proxy.f-sormani-1985.workers.dev/?url=</span></div>
+          <div class="hint" style="margin-top:12px">
+            <div style="font-weight:900;margin-bottom:6px">Aggiungi fonte</div>
+            <div class="row">
+              <div style="flex:1;min-width:140px">
+                <label>Nome</label>
+                <input id="inName" placeholder="Es. Mediterranea Saving Humans" />
+              </div>
+              <div style="flex:1;min-width:140px">
+                <label>Tipo</label>
+                <select id="inType">
+                  <option value="rss">RSS/Atom</option>
+                  <option value="html-seawatch">HTML (Sea-Watch style)</option>
+                  <option value="html-sos">HTML (SOS Humanity style)</option>
+                  <option value="html-generic">HTML (generico: link interni)</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <label>URL</label>
+              <input id="inUrl" placeholder="https://… (feed RSS o pagina elenco)" />
+              <div class="mini" style="margin-top:6px">Consiglio OSINT: se hai un feed RSS, usa quello. È più stabile del parsing HTML.</div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button id="btnAdd">Aggiungi</button>
+              <button id="btnTest" class="secondary">Test rapido</button>
+            </div>
+            <div class="mini" id="testOut" style="margin-top:8px"></div>
+          </div>
+
+          <div class="hint" style="margin-top:12px">
+            <div><b>Proxy (Workers):</b></div>
+            <div class="small" style="margin-top:6px;font-family:var(--mono)" id="proxyLabel"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="grid"></div>
     </div>
   </div>
 
 <script>
 (() => {
   const PROXY = "https://news-proxy.f-sormani-1985.workers.dev/?url=";
-  const LS_KEY = "newsWatch:lastSeen:v2";
 
-  const SOURCES = [
-    { id:"sea-watch", name:"Sea-Watch — News", site:"sea-watch.org", url:"https://sea-watch.org/en/news/", parse: parseSeaWatch },
-    { id:"sos-humanity", name:"SOS Humanity — Press", site:"sos-humanity.org", url:"https://sos-humanity.org/en/press/", parse: parseSosHumanity }
-  ];
+  const LS_KEY_LAST = "osintWatch:lastSeen:v3";
+  const LS_KEY_SOURCES = "osintWatch:sources:v3";
+  const LS_KEY_HIDE_ALERT = "osintWatch:hideAlert:v1";
 
   const elGrid = document.getElementById("grid");
   const elStatus = document.getElementById("status");
+  const elSourcesList = document.getElementById("sourcesList");
+  const elProxyLabel = document.getElementById("proxyLabel");
+  const elAlertbar = document.getElementById("alertbar");
+  const elAlerttext = document.getElementById("alerttext");
+  const elTestOut = document.getElementById("testOut");
+
+  const inName = document.getElementById("inName");
+  const inUrl = document.getElementById("inUrl");
+  const inType = document.getElementById("inType");
+
+  elProxyLabel.textContent = PROXY;
+
   document.getElementById("btnRefresh").addEventListener("click", refreshAll);
   document.getElementById("btnReset").addEventListener("click", resetLocal);
+  document.getElementById("btnAdd").addEventListener("click", addSourceFromUI);
+  document.getElementById("btnTest").addEventListener("click", testSourceFromUI);
+  document.getElementById("btnAddPreset").addEventListener("click", restorePresetSources);
+  document.getElementById("btnHideAlert").addEventListener("click", () => {
+    localStorage.setItem(LS_KEY_HIDE_ALERT, "1");
+    elAlertbar.classList.remove("on");
+  });
+  document.getElementById("btnMarkAll").addEventListener("click", markAllRead);
 
   function setStatus(kind, txt){
     elStatus.innerHTML = `Stato: <b>${escapeHtml(txt)}</b>`;
     elStatus.style.borderColor =
       kind==="good" ? "rgba(39,209,123,.35)" :
       kind==="warn" ? "rgba(255,204,102,.35)" :
-      kind==="bad"  ? "rgba(255,107,107,.35)" :
+      kind==="bad"  ? "rgba(255,59,59,.45)" :
       "rgba(255,255,255,.12)";
   }
-
-  function loadState(){
-    try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }
-    catch { return {}; }
-  }
-  function saveState(s){ localStorage.setItem(LS_KEY, JSON.stringify(s)); }
 
   function escapeHtml(s){
     return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -144,26 +282,82 @@
     }[m]));
   }
 
-  async function fetchHtml(url){
+  function loadJSON(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || "") ?? fallback; }
+    catch { return fallback; }
+  }
+  function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+
+  async function fetchText(url){
     const res = await fetch(PROXY + encodeURIComponent(url), { cache:"no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.text();
   }
 
-  function render(){
-    elGrid.innerHTML = "";
-    const state = loadState();
+  function uid(){
+    return Math.random().toString(36).slice(2, 9) + "-" + Date.now().toString(36);
+  }
 
-    for (const src of SOURCES){
-      const lastSeen = state[src.id]?.lastSeenUrl || null;
-      elGrid.appendChild(card(src, {status:"idle", lastSeenUrl:lastSeen, items:[], newCount:0, error:null, fetchedAt:null}));
+  function presetSources(){
+    return [
+      { id:"sea-watch", name:"Sea-Watch — News", type:"html-seawatch", url:"https://sea-watch.org/en/news/" },
+      { id:"sos-humanity", name:"SOS Humanity — Press", type:"html-sos", url:"https://sos-humanity.org/en/press/" },
+
+      { id:"msf", name:"MSF (Doctors Without Borders) — Press (RSS)", type:"rss", url:"https://www.doctorswithoutborders.org/rss.xml" },
+      { id:"unhcr", name:"UNHCR — News (RSS)", type:"rss", url:"https://www.unhcr.org/rss/news.xml" },
+      { id:"iom", name:"IOM — News (RSS)", type:"rss", url:"https://www.iom.int/rss.xml" },
+
+      { id:"openarms", name:"Open Arms — News (HTML)", type:"html-generic", url:"https://www.openarms.es/en/news/" },
+      { id:"seaeeye", name:"Sea-Eye — News (HTML)", type:"html-generic", url:"https://sea-eye.org/en/news/" },
+      { id:"sosmed", name:"SOS Méditerranée — News (HTML)", type:"html-generic", url:"https://sosmediterranee.org/en/news/" },
+    ];
+  }
+
+  function getSources(){
+    const stored = loadJSON(LS_KEY_SOURCES, null);
+    if (stored && Array.isArray(stored) && stored.length) return stored;
+    const p = presetSources();
+    saveJSON(LS_KEY_SOURCES, p);
+    return p;
+  }
+  function setSources(arr){ saveJSON(LS_KEY_SOURCES, arr); }
+
+  function loadLastSeen(){ return loadJSON(LS_KEY_LAST, {}); }
+  function saveLastSeen(obj){ saveJSON(LS_KEY_LAST, obj); }
+
+  function renderSourcesSidebar(){
+    const sources = getSources();
+    elSourcesList.innerHTML = "";
+    for (const s of sources){
+      const row = document.createElement("div");
+      row.className = "srcRow";
+      row.innerHTML = `
+        <div class="srcTop">
+          <div class="srcName">${escapeHtml(s.name)}</div>
+          <div class="srcBtns">
+            <button class="secondary" data-act="edit" data-id="${escapeHtml(s.id)}">Modifica</button>
+            <button class="secondary" data-act="del" data-id="${escapeHtml(s.id)}">Rimuovi</button>
+          </div>
+        </div>
+        <div class="srcMeta">${escapeHtml(s.type)} • ${escapeHtml(s.url)}</div>
+      `;
+      elSourcesList.appendChild(row);
+    }
+  }
+
+  function renderCardsSkeleton(){
+    const sources = getSources();
+    const last = loadLastSeen();
+    elGrid.innerHTML = "";
+    for (const src of sources){
+      const lastSeenUrl = last[src.id]?.lastSeenUrl || null;
+      elGrid.appendChild(card(src, {status:"idle", lastSeenUrl, items:[], newCount:0, error:null, fetchedAt:null}));
     }
   }
 
   function card(src, d){
     const c = document.createElement("div");
-    c.className = "card";
-
+    c.className = "card" + (d.newCount>0 ? " alert" : "");
     const dotClass = d.status==="good" ? "dot good" : d.status==="warn" ? "dot warn" : d.status==="bad" ? "dot bad" : "dot";
     const fetchedLabel = d.fetchedAt ? new Date(d.fetchedAt).toLocaleString("it-IT") : "—";
     const lastShort = d.lastSeenUrl ? d.lastSeenUrl.replace(/^https?:\/\//,"") : "—";
@@ -174,7 +368,7 @@
       <div>
         <div class="name"><span class="${dotClass}"></span><span>${escapeHtml(src.name)}</span></div>
         <div class="meta">
-          <span class="chip">Fonte: <strong>${escapeHtml(src.site)}</strong></span>
+          <span class="chip">Tipo: <strong>${escapeHtml(src.type)}</strong></span>
           <span class="chip">Nuove: <strong>${d.newCount}</strong></span>
           <span class="chip">Check: <strong>${escapeHtml(fetchedLabel)}</strong></span>
         </div>
@@ -219,112 +413,9 @@
     return c;
   }
 
-  function replaceCard(srcId, node){
-    const idx = SOURCES.findIndex(s => s.id===srcId);
-    const old = elGrid.children[idx];
+  function replaceCardByIndex(index, node){
+    const old = elGrid.children[index];
     if (old) elGrid.replaceChild(node, old);
-  }
-
-  async function refreshAll(){
-    setStatus("warn","controllo…");
-    const state = loadState();
-
-    for (const src of SOURCES){
-      try{
-        const html = await fetchHtml(src.url);
-        const items = src.parse(html, src.url);
-
-        const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
-        let newCount = 0;
-
-        if (!lastSeenUrl){
-          newCount = 0; // prima volta: evitiamo falsi allarmi
-        } else {
-          for (const it of items){
-            if (it.url === lastSeenUrl) break;
-            newCount++;
-          }
-        }
-
-        const status = !lastSeenUrl ? "warn" : (newCount>0 ? "good" : "idle");
-        replaceCard(src.id, card(src, {status, lastSeenUrl, items, newCount, error:null, fetchedAt:Date.now()}));
-      } catch(e){
-        const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
-        replaceCard(src.id, card(src, {status:"bad", lastSeenUrl, items:[], newCount:0, error:String(e.message||e), fetchedAt:Date.now()}));
-      }
-    }
-
-    setStatus("good","ok");
-  }
-
-  async function markRead(id){
-    const src = SOURCES.find(s => s.id===id);
-    if (!src) return;
-
-    try{
-      setStatus("warn","salvo baseline…");
-      const html = await fetchHtml(src.url);
-      const items = src.parse(html, src.url);
-      const top = items[0]?.url;
-      if (!top) throw new Error("Nessun item trovato.");
-
-      const state = loadState();
-      state[src.id] = { lastSeenUrl: top, savedAt: Date.now() };
-      saveState(state);
-
-      replaceCard(src.id, card(src, {status:"good", lastSeenUrl:top, items, newCount:0, error:null, fetchedAt:Date.now()}));
-      setStatus("good","baseline salvata");
-    } catch(e){
-      setStatus("bad","errore baseline");
-      alert("Errore: " + (e.message||e));
-    }
-  }
-
-  function resetLocal(){
-    localStorage.removeItem(LS_KEY);
-    render();
-    setStatus("warn","storico locale cancellato");
-  }
-
-  // Click delegation
-  elGrid.addEventListener("click", (ev) => {
-    const btn = ev.target.closest("button[data-action='read']");
-    if (!btn) return;
-    markRead(btn.getAttribute("data-id"));
-  });
-
-  // Parsers (minimi ma funzionanti)
-  function parseSeaWatch(html, baseUrl){
-    const doc = new DOMParser().parseFromString(html,"text/html");
-    const out = [];
-    // h3 > a tipico nella pagina news
-    const links = Array.from(doc.querySelectorAll("h3 a")).map(a => ({
-      title: (a.textContent||"").trim(),
-      url: new URL(a.getAttribute("href"), baseUrl).toString(),
-      node: a
-    })).filter(x => x.title && x.url && x.url !== baseUrl);
-
-    for (const x of links){
-      out.push({ title:x.title, url:x.url, date:"" });
-    }
-    return dedup(out).slice(0,12);
-  }
-
-  function parseSosHumanity(html, baseUrl){
-    const doc = new DOMParser().parseFromString(html,"text/html");
-    const out = [];
-    const as = Array.from(doc.querySelectorAll('a[href*="/en/press/"]'))
-      .filter(a => a.getAttribute("href") && !a.getAttribute("href").endsWith("/en/press/"));
-
-    for (const a of as){
-      const txt = (a.textContent||"").replace(/\\s+/g," ").trim();
-      const url = new URL(a.getAttribute("href"), baseUrl).toString();
-      const m = txt.match(/\\b(\\d{2}\\.\\d{2}\\.\\d{2})\\b/);
-      const date = m ? m[1] : "";
-      const title = txt.replace(/\\b\\d{2}\\.\\d{2}\\.\\d{2}\\b/g,"").trim() || url;
-      out.push({ title, url, date });
-    }
-    return dedup(out).slice(0,12);
   }
 
   function dedup(items){
@@ -337,7 +428,268 @@
     return out;
   }
 
-  render();
+  function parseHtmlSeaWatch(html, baseUrl){
+    const doc = new DOMParser().parseFromString(html,"text/html");
+    const out = [];
+    const links = Array.from(doc.querySelectorAll("h3 a")).map(a => ({
+      title: (a.textContent||"").trim(),
+      url: new URL(a.getAttribute("href"), baseUrl).toString()
+    })).filter(x => x.title && x.url && x.url !== baseUrl);
+    for (const x of links) out.push({ title:x.title, url:x.url, date:"" });
+    return dedup(out).slice(0, 20);
+  }
+
+  function parseHtmlSosHumanity(html, baseUrl){
+    const doc = new DOMParser().parseFromString(html,"text/html");
+    const out = [];
+    const as = Array.from(doc.querySelectorAll('a[href*="/en/press/"]'))
+      .filter(a => a.getAttribute("href") && !a.getAttribute("href").endsWith("/en/press/"));
+    for (const a of as){
+      const txt = (a.textContent||"").replace(/\s+/g," ").trim();
+      const url = new URL(a.getAttribute("href"), baseUrl).toString();
+      const m = txt.match(/\b(\d{2}\.\d{2}\.\d{2})\b/);
+      const date = m ? m[1] : "";
+      const title = txt.replace(/\b\d{2}\.\d{2}\.\d{2}\b/g,"").trim() || url;
+      out.push({ title, url, date });
+    }
+    return dedup(out).slice(0, 20);
+  }
+
+  function parseHtmlGeneric(html, baseUrl){
+    const doc = new DOMParser().parseFromString(html,"text/html");
+    const base = new URL(baseUrl);
+    const out = [];
+    const candidates = Array.from(doc.querySelectorAll("a"))
+      .map(a => ({ title: (a.textContent||"").replace(/\s+/g," ").trim(), href: a.getAttribute("href") }))
+      .filter(x => x.href && x.title && x.title.length >= 25);
+
+    for (const c of candidates){
+      try{
+        const u = new URL(c.href, baseUrl);
+        if (u.hostname !== base.hostname) continue;
+        if (u.toString() === baseUrl) continue;
+        const p = u.pathname.toLowerCase();
+        if (p.includes("/tag/") || p.includes("/category/") || p.includes("/author/")) continue;
+        out.push({ title:c.title, url:u.toString(), date:"" });
+      } catch {}
+    }
+    return dedup(out).slice(0, 20);
+  }
+
+  function parseRss(xmlText){
+    const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+    const out = [];
+    const items = Array.from(doc.querySelectorAll("item"));
+    if (items.length){
+      for (const it of items){
+        const title = (it.querySelector("title")?.textContent || "").trim();
+        const link = (it.querySelector("link")?.textContent || "").trim();
+        const pub = (it.querySelector("pubDate")?.textContent || "").trim();
+        if (!link) continue;
+        out.push({ title: title || link, url: link, date: pub ? new Date(pub).toLocaleDateString("it-IT") : "" });
+      }
+      return dedup(out).slice(0, 20);
+    }
+    const entries = Array.from(doc.querySelectorAll("entry"));
+    for (const e of entries){
+      const title = (e.querySelector("title")?.textContent || "").trim();
+      const linkEl = e.querySelector("link[rel='alternate']") || e.querySelector("link");
+      const href = linkEl?.getAttribute("href") || "";
+      const upd = (e.querySelector("updated")?.textContent || e.querySelector("published")?.textContent || "").trim();
+      if (!href) continue;
+      out.push({ title: title || href, url: href, date: upd ? new Date(upd).toLocaleDateString("it-IT") : "" });
+    }
+    return dedup(out).slice(0, 20);
+  }
+
+  async function fetchAndParse(src){
+    const text = await fetchText(src.url);
+    if (src.type === "rss") return parseRss(text);
+    if (src.type === "html-seawatch") return parseHtmlSeaWatch(text, src.url);
+    if (src.type === "html-sos") return parseHtmlSosHumanity(text, src.url);
+    return parseHtmlGeneric(text, src.url);
+  }
+
+  async function refreshAll(){
+    setStatus("warn","controllo…");
+    const sources = getSources();
+    const state = loadLastSeen();
+
+    let totalNew = 0;
+    const newBySource = [];
+
+    for (let i=0;i<sources.length;i++){
+      const src = sources[i];
+      try{
+        const items = await fetchAndParse(src);
+        const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
+        let newCount = 0;
+
+        if (lastSeenUrl){
+          for (const it of items){
+            if (it.url === lastSeenUrl) break;
+            newCount++;
+          }
+        }
+
+        totalNew += newCount;
+        if (newCount>0) newBySource.push({ name: src.name, n: newCount });
+
+        const status = !lastSeenUrl ? "warn" : (newCount>0 ? "good" : "idle");
+        replaceCardByIndex(i, card(src, {status, lastSeenUrl, items, newCount, error:null, fetchedAt:Date.now()}));
+      } catch(e){
+        const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
+        replaceCardByIndex(i, card(src, {status:"bad", lastSeenUrl, items:[], newCount:0, error:String(e.message||e), fetchedAt:Date.now()}));
+      }
+    }
+
+    const hide = localStorage.getItem(LS_KEY_HIDE_ALERT) === "1";
+    if (!hide && totalNew > 0){
+      elAlertbar.classList.add("on");
+      elAlerttext.textContent = newBySource.map(x => `${x.name}: +${x.n}`).join(" • ");
+    } else {
+      elAlertbar.classList.remove("on");
+    }
+
+    setStatus("good","ok");
+  }
+
+  async function markRead(id){
+    const sources = getSources();
+    const idx = sources.findIndex(s => s.id===id);
+    const src = sources[idx];
+    if (!src) return;
+
+    try{
+      setStatus("warn","salvo baseline…");
+      const items = await fetchAndParse(src);
+      const top = items[0]?.url;
+      if (!top) throw new Error("Nessun item trovato.");
+
+      const state = loadLastSeen();
+      state[src.id] = { lastSeenUrl: top, savedAt: Date.now() };
+      saveLastSeen(state);
+
+      replaceCardByIndex(idx, card(src, {status:"good", lastSeenUrl:top, items, newCount:0, error:null, fetchedAt:Date.now()}));
+      setStatus("good","baseline salvata");
+    } catch(e){
+      setStatus("bad","errore baseline");
+      alert("Errore: " + (e.message||e));
+    }
+  }
+
+  async function markAllRead(){
+    const sources = getSources();
+    const state = loadLastSeen();
+    setStatus("warn","baseline (tutte)…");
+
+    for (const src of sources){
+      try{
+        const items = await fetchAndParse(src);
+        const top = items[0]?.url;
+        if (top) state[src.id] = { lastSeenUrl: top, savedAt: Date.now() };
+      } catch {}
+    }
+    saveLastSeen(state);
+    localStorage.removeItem(LS_KEY_HIDE_ALERT);
+    elAlertbar.classList.remove("on");
+    setStatus("good","baseline salvata");
+    renderCardsSkeleton();
+  }
+
+  function resetLocal(){
+    localStorage.removeItem(LS_KEY_LAST);
+    localStorage.removeItem(LS_KEY_HIDE_ALERT);
+    renderCardsSkeleton();
+    setStatus("warn","storico locale cancellato");
+  }
+
+  function restorePresetSources(){
+    const p = presetSources();
+    setSources(p);
+    renderSourcesSidebar();
+    renderCardsSkeleton();
+    setStatus("warn","preset ripristinato");
+  }
+
+  function addSourceFromUI(){
+    const name = (inName.value || "").trim();
+    const url = (inUrl.value || "").trim();
+    const type = inType.value;
+    if (!name || !url){ alert("Inserisci Nome e URL."); return; }
+    const sources = getSources();
+    sources.push({ id: uid(), name, type, url });
+    setSources(sources);
+    inName.value = ""; inUrl.value = ""; inType.value = "rss";
+    renderSourcesSidebar();
+    renderCardsSkeleton();
+    setStatus("good","fonte aggiunta");
+  }
+
+  async function testSourceFromUI(){
+    elTestOut.textContent = "Test in corso…";
+    try{
+      const name = (inName.value || "Test").trim();
+      const url = (inUrl.value || "").trim();
+      const type = inType.value;
+      if (!url) { elTestOut.textContent = "Inserisci un URL per testare."; return; }
+      const items = await fetchAndParse({ id:"tmp", name, type, url });
+      if (!items.length){ elTestOut.textContent = "OK fetch, ma parsing ha trovato 0 item. Prova un altro tipo (RSS/HTML)."; return; }
+      elTestOut.textContent = `OK: trovati ${items.length} item. Primo: ${items[0].title}`;
+    } catch(e){
+      elTestOut.textContent = "Errore: " + (e.message || e);
+    }
+  }
+
+  elGrid.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("button[data-action='read']");
+    if (!btn) return;
+    markRead(btn.getAttribute("data-id"));
+  });
+
+  elSourcesList.addEventListener("click", (ev) => {
+    const b = ev.target.closest("button[data-act]");
+    if (!b) return;
+    const act = b.getAttribute("data-act");
+    const id = b.getAttribute("data-id");
+    const sources = getSources();
+    const idx = sources.findIndex(s => s.id===id);
+    if (idx < 0) return;
+
+    if (act === "del"){
+      if (!confirm("Rimuovere questa fonte?")) return;
+      sources.splice(idx, 1);
+      setSources(sources);
+      const st = loadLastSeen();
+      delete st[id];
+      saveLastSeen(st);
+      renderSourcesSidebar();
+      renderCardsSkeleton();
+      setStatus("warn","fonte rimossa");
+      return;
+    }
+
+    if (act === "edit"){
+      const s = sources[idx];
+      const newName = prompt("Nome fonte:", s.name);
+      if (newName === null) return;
+      const newUrl = prompt("URL:", s.url);
+      if (newUrl === null) return;
+      const newType = prompt("Tipo (rss / html-seawatch / html-sos / html-generic):", s.type);
+      if (newType === null) return;
+      s.name = newName.trim() || s.name;
+      s.url = newUrl.trim() || s.url;
+      s.type = (newType.trim() || s.type);
+      sources[idx] = s;
+      setSources(sources);
+      renderSourcesSidebar();
+      renderCardsSkeleton();
+      setStatus("good","fonte aggiornata");
+    }
+  });
+
+  renderSourcesSidebar();
+  renderCardsSkeleton();
   setStatus("warn","premi Aggiorna");
 })();
 </script>
