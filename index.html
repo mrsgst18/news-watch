@@ -243,9 +243,9 @@
       <div class="ph">
         <div>
           <h2>Fonti</h2>
-          <div class="sub">Aggiungi fonti (meglio RSS quando disponibile). Le fonti vengono salvate in locale.</div>
+          <div class="sub">Aggiungi fonti (meglio RSS quando disponibile). Le fonti vengono salvate in locale. Se locale è vuoto, vengono caricate da <span class="kbd">sources.json</span>.</div>
         </div>
-        <button id="btnAddPreset" class="secondary" title="Ripristina lista predefinita">Preset</button>
+        <button id="btnAddPreset" class="secondary" title="Ricarica da sources.json (repo)">Preset</button>
       </div>
       <div class="pc">
         <div class="sourcesList" id="sourcesList"></div>
@@ -319,7 +319,6 @@
   } catch {}
   elChkHideEmpty.addEventListener("change", () => {
     localStorage.setItem(LS_KEY_HIDE_EMPTY, elChkHideEmpty.checked ? "1" : "0");
-    // Applica subito alla vista corrente senza rifare fetch
     applyHideEmptyToExistingCards();
   });
 
@@ -374,6 +373,16 @@
   }
   function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
 
+  // ====== NUOVO: carica le fonti dal repo (sources.json) ======
+  async function loadSourcesFromRepo(){
+    const url = "sources.json?v=" + Date.now(); // cache-bust
+    const res = await fetch(url, { cache:"no-store" });
+    if (!res.ok) throw new Error("sources.json non disponibile (HTTP " + res.status + ")");
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error("sources.json non è un array");
+    return data;
+  }
+
   async function fetchText(url){
     const res = await fetch(PROXY + encodeURIComponent(url), { cache:"no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -384,35 +393,42 @@
     return Math.random().toString(36).slice(2, 9) + "-" + Date.now().toString(36);
   }
 
+  // Fallback estremo (se manca sources.json e locale è vuoto)
   function presetSources(){
     return [
       { id:"sea-watch", name:"Sea-Watch — News", type:"html-seawatch", url:"https://sea-watch.org/en/news/" },
-      { id:"sos-humanity", name:"SOS Humanity — Press", type:"html-sos", url:"https://sos-humanity.org/en/press/" },
-
-      { id:"msf", name:"MSF (Doctors Without Borders) — Press (RSS)", type:"rss", url:"https://www.doctorswithoutborders.org/rss.xml" },
-      { id:"unhcr", name:"UNHCR — News (RSS)", type:"rss", url:"https://www.unhcr.org/rss/news.xml" },
-      { id:"iom", name:"IOM — News (RSS)", type:"rss", url:"https://www.iom.int/rss.xml" },
-
-      { id:"openarms", name:"Open Arms — News (HTML)", type:"html-generic", url:"https://www.openarms.es/en/news/" },
-      { id:"seaeeye", name:"Sea-Eye — News (HTML)", type:"html-generic", url:"https://sea-eye.org/en/news/" },
-      { id:"sosmed", name:"SOS Méditerranée — News (HTML)", type:"html-generic", url:"https://sosmediterranee.org/en/news/" },
+      { id:"sos-humanity", name:"SOS Humanity — Press", type:"html-sos", url:"https://sos-humanity.org/en/press/" }
     ];
   }
 
-  function getSources(){
+  // ====== NUOVO: getSources è async ======
+  async function getSources(){
     const stored = loadJSON(LS_KEY_SOURCES, null);
     if (stored && Array.isArray(stored) && stored.length) return stored;
+
+    // Se non ho nulla in locale, provo dal repo
+    try{
+      const repoSources = await loadSourcesFromRepo();
+      if (repoSources.length){
+        saveJSON(LS_KEY_SOURCES, repoSources);
+        return repoSources;
+      }
+    } catch(e){
+      console.warn("Caricamento da sources.json fallito, uso fallback:", e);
+    }
+
     const p = presetSources();
     saveJSON(LS_KEY_SOURCES, p);
     return p;
   }
+
   function setSources(arr){ saveJSON(LS_KEY_SOURCES, arr); }
 
   function loadLastSeen(){ return loadJSON(LS_KEY_LAST, {}); }
   function saveLastSeen(obj){ saveJSON(LS_KEY_LAST, obj); }
 
-  function renderSourcesSidebar(){
-    const sources = getSources();
+  async function renderSourcesSidebar(){
+    const sources = await getSources();
     elSourcesList.innerHTML = "";
     for (const s of sources){
       const row = document.createElement("div");
@@ -431,8 +447,8 @@
     }
   }
 
-  function renderCardsSkeleton(){
-    const sources = getSources();
+  async function renderCardsSkeleton(){
+    const sources = await getSources();
     const last = loadLastSeen();
     elGrid.innerHTML = "";
     for (const src of sources){
@@ -500,12 +516,10 @@
     return c;
   }
 
-
   function applyHideEmptyToExistingCards(){
     const hideEmpty = elChkHideEmpty?.checked;
     const cards = Array.from(elGrid.children);
     for (const c of cards){
-      // Marker: set by refreshAll when we know item count
       const cnt = Number(c.getAttribute("data-itemcount") || "0");
       if (hideEmpty && cnt === 0) c.style.display = "none";
       else c.style.display = "";
@@ -611,7 +625,7 @@
 
   async function refreshAll(){
     setStatus("warn","controllo…");
-    const sources = getSources();
+    const sources = await getSources();
     const state = loadLastSeen();
 
     let totalNew = 0;
@@ -637,14 +651,14 @@
         const status = !lastSeenUrl ? "warn" : (newCount>0 ? "good" : "idle");
         const node = card(src, {status, lastSeenUrl, items, newCount, error:null, fetchedAt:Date.now()});
         replaceCardByIndex(i, node);
-        // Nascondi fonti vuote (solo UI)
+
         if (elChkHideEmpty?.checked && items.length === 0) node.style.display = "none";
         else node.style.display = "";
       } catch(e){
         const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
         const node = card(src, {status:"bad", lastSeenUrl, items:[], newCount:0, error:String(e.message||e), fetchedAt:Date.now()});
         replaceCardByIndex(i, node);
-        node.style.display = ""; // gli errori devono restare visibili
+        node.style.display = "";
       }
     }
 
@@ -660,7 +674,7 @@
   }
 
   async function markRead(id){
-    const sources = getSources();
+    const sources = await getSources();
     const idx = sources.findIndex(s => s.id===id);
     const src = sources[idx];
     if (!src) return;
@@ -684,7 +698,7 @@
   }
 
   async function markAllRead(){
-    const sources = getSources();
+    const sources = await getSources();
     const state = loadLastSeen();
     setStatus("warn","baseline (tutte)…");
 
@@ -699,37 +713,53 @@
     localStorage.removeItem(LS_KEY_HIDE_ALERT);
     elAlertbar.classList.remove("on");
     setStatus("good","baseline salvata");
-    renderCardsSkeleton();
+    await renderCardsSkeleton();
+    applyHideEmptyToExistingCards();
   }
 
-  function resetLocal(){
+  async function resetLocal(){
     localStorage.removeItem(LS_KEY_LAST);
     localStorage.removeItem(LS_KEY_HIDE_ALERT);
-    renderCardsSkeleton();
+    await renderCardsSkeleton();
     applyHideEmptyToExistingCards();
     setStatus("warn","storico locale cancellato");
   }
 
-  function restorePresetSources(){
-    const p = presetSources();
-    setSources(p);
-    renderSourcesSidebar();
-    renderCardsSkeleton();
-    applyHideEmptyToExistingCards();
-    setStatus("warn","preset ripristinato");
+  // ====== Preset = ricarica da sources.json (repo) ======
+  async function restorePresetSources(){
+    setStatus("warn","ricarico preset…");
+    try{
+      const repoSources = await loadSourcesFromRepo();
+      if (!repoSources.length) throw new Error("sources.json è vuoto");
+      setSources(repoSources);
+      await renderSourcesSidebar();
+      await renderCardsSkeleton();
+      applyHideEmptyToExistingCards();
+      setStatus("good","preset ricaricato");
+    } catch(e){
+      const p = presetSources();
+      setSources(p);
+      await renderSourcesSidebar();
+      await renderCardsSkeleton();
+      applyHideEmptyToExistingCards();
+      setStatus("bad","preset fallback");
+      alert("Non riesco a caricare sources.json, uso fallback.\nDettaglio: " + (e.message||e));
+    }
   }
 
-  function addSourceFromUI(){
+  async function addSourceFromUI(){
     const name = (inName.value || "").trim();
     const url = (inUrl.value || "").trim();
     const type = inType.value;
     if (!name || !url){ alert("Inserisci Nome e URL."); return; }
-    const sources = getSources();
+
+    const sources = await getSources();
     sources.push({ id: uid(), name, type, url });
     setSources(sources);
+
     inName.value = ""; inUrl.value = ""; inType.value = "rss";
-    renderSourcesSidebar();
-    renderCardsSkeleton();
+    await renderSourcesSidebar();
+    await renderCardsSkeleton();
     applyHideEmptyToExistingCards();
     setStatus("good","fonte aggiunta");
   }
@@ -758,50 +788,56 @@
   elSourcesList.addEventListener("click", (ev) => {
     const b = ev.target.closest("button[data-act]");
     if (!b) return;
-    const act = b.getAttribute("data-act");
-    const id = b.getAttribute("data-id");
-    const sources = getSources();
-    const idx = sources.findIndex(s => s.id===id);
-    if (idx < 0) return;
+    (async () => {
+      const act = b.getAttribute("data-act");
+      const id = b.getAttribute("data-id");
+      const sources = await getSources();
+      const idx = sources.findIndex(s => s.id===id);
+      if (idx < 0) return;
 
-    if (act === "del"){
-      if (!confirm("Rimuovere questa fonte?")) return;
-      sources.splice(idx, 1);
-      setSources(sources);
-      const st = loadLastSeen();
-      delete st[id];
-      saveLastSeen(st);
-      renderSourcesSidebar();
-      renderCardsSkeleton();
-      applyHideEmptyToExistingCards();
-      setStatus("warn","fonte rimossa");
-      return;
-    }
+      if (act === "del"){
+        if (!confirm("Rimuovere questa fonte?")) return;
+        sources.splice(idx, 1);
+        setSources(sources);
+        const st = loadLastSeen();
+        delete st[id];
+        saveLastSeen(st);
+        await renderSourcesSidebar();
+        await renderCardsSkeleton();
+        applyHideEmptyToExistingCards();
+        setStatus("warn","fonte rimossa");
+        return;
+      }
 
-    if (act === "edit"){
-      const s = sources[idx];
-      const newName = prompt("Nome fonte:", s.name);
-      if (newName === null) return;
-      const newUrl = prompt("URL:", s.url);
-      if (newUrl === null) return;
-      const newType = prompt("Tipo (rss / html-seawatch / html-sos / html-generic):", s.type);
-      if (newType === null) return;
-      s.name = newName.trim() || s.name;
-      s.url = newUrl.trim() || s.url;
-      s.type = (newType.trim() || s.type);
-      sources[idx] = s;
-      setSources(sources);
-      renderSourcesSidebar();
-      renderCardsSkeleton();
-      applyHideEmptyToExistingCards();
-      setStatus("good","fonte aggiornata");
-    }
+      if (act === "edit"){
+        const s = sources[idx];
+        const newName = prompt("Nome fonte:", s.name);
+        if (newName === null) return;
+        const newUrl = prompt("URL:", s.url);
+        if (newUrl === null) return;
+        const newType = prompt("Tipo (rss / html-seawatch / html-sos / html-generic):", s.type);
+        if (newType === null) return;
+        s.name = newName.trim() || s.name;
+        s.url = newUrl.trim() || s.url;
+        s.type = (newType.trim() || s.type);
+        sources[idx] = s;
+        setSources(sources);
+        await renderSourcesSidebar();
+        await renderCardsSkeleton();
+        applyHideEmptyToExistingCards();
+        setStatus("good","fonte aggiornata");
+      }
+    })();
   });
 
-  renderSourcesSidebar();
-  renderCardsSkeleton();
-  applyHideEmptyToExistingCards();
-  setStatus("warn","premi Aggiorna");
+  // Bootstrap async
+  (async () => {
+    await renderSourcesSidebar();
+    await renderCardsSkeleton();
+    applyHideEmptyToExistingCards();
+    setStatus("warn","premi Aggiorna");
+  })();
+
 })();
 </script>
 </body>
