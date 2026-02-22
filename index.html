@@ -3,134 +3,343 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>News Watch — prova</title>
+  <title>News Watch</title>
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: #0f172a;
-      color: #f1f5f9;
+    :root{
+      --bg:#0b1020;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(255,255,255,.10);
+      --stroke:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --good:#27d17b;
+      --warn:#ffcc66;
+      --bad:#ff6b6b;
+      --shadow:0 16px 44px rgba(0,0,0,.55);
+      --r:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
-    header {
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #111827;
-      border-bottom: 1px solid #1f2937;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% 10%, rgba(106,167,255,.22), transparent 55%),
+        radial-gradient(1000px 700px at 85% 0%, rgba(166,125,255,.18), transparent 50%),
+        radial-gradient(900px 700px at 50% 90%, rgba(40,209,124,.12), transparent 60%),
+        var(--bg);
     }
-    h1 { margin: 0; font-size: 20px; }
-    button {
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      background: #2563eb;
-      color: white;
+    .wrap{max-width:1100px;margin:0 auto;padding:26px 18px 60px;}
+    header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px;}
+    h1{margin:0;font-size:22px;letter-spacing:.2px}
+    p{margin:6px 0 0;color:var(--muted);max-width:75ch;line-height:1.35}
+    .tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    button{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      color:var(--text);
+      padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:800;
+      box-shadow:0 6px 18px rgba(0,0,0,.25);
     }
-    .container {
-      max-width: 900px;
-      margin: 30px auto;
-      padding: 0 20px;
+    button.secondary{background:transparent;box-shadow:none}
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:10px 12px;border-radius:14px;border:1px solid var(--stroke);
+      background:rgba(255,255,255,.05);color:var(--muted);font-size:13px;
     }
-    .card {
-      background: #1e293b;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      border: 1px solid #334155;
+    .pill b{color:var(--text)}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px;}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr;}}
+    .card{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, var(--panel), rgba(255,255,255,.03));
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      overflow:hidden;
     }
-    .card h2 {
-      margin: 0 0 10px 0;
-      font-size: 16px;
+    .head{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08);
     }
-    .item {
-      padding: 10px 0;
-      border-top: 1px solid #334155;
+    .name{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.2px}
+    .dot{width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.45);box-shadow:0 0 0 6px rgba(255,255,255,.04)}
+    .dot.good{background:var(--good);box-shadow:0 0 0 6px rgba(39,209,123,.14)}
+    .dot.warn{background:var(--warn);box-shadow:0 0 0 6px rgba(255,204,102,.14)}
+    .dot.bad{background:var(--bad);box-shadow:0 0 0 6px rgba(255,107,107,.14)}
+    .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12.5px;margin-top:6px}
+    .chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);padding:4px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
+    .chip strong{color:var(--text)}
+    .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    a.chip{text-decoration:none}
+    a.chip:hover{background:rgba(255,255,255,.12)}
+    .list{padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px;}
+    .item{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.18);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+    .top{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+    .item a{color:inherit;text-decoration:none;font-weight:800;line-height:1.25}
+    .item a:hover{text-decoration:underline;text-decoration-thickness:2px}
+    .date{color:var(--muted);font-size:12px;white-space:nowrap;font-family:var(--mono)}
+    .hint{
+      margin-top:10px;color:var(--muted);font-size:12.5px;line-height:1.4;
+      border:1px dashed rgba(255,255,255,.18);border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03)
     }
-    .item:first-child { border-top: none; }
-    .item a {
-      color: #60a5fa;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .item small {
-      display: block;
-      color: #94a3b8;
-      margin-top: 4px;
-    }
-    .status {
-      margin-top: 6px;
-      font-size: 13px;
-      color: #fbbf24;
-    }
+    .small{font-size:12px;color:var(--muted);line-height:1.45}
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>News Watch</h1>
+        <p>Quando apri questa pagina, premi <b>Aggiorna</b>: ti segnala se una fonte ha pubblicato qualcosa di nuovo. Lo storico “ultimo visto” resta <b>in locale</b> nel tuo browser.</p>
+      </div>
+      <div class="tools">
+        <button id="btnRefresh">Aggiorna</button>
+        <button id="btnReset" class="secondary" title="Cancella lo storico locale (ultimo visto)">Reset locale</button>
+        <span class="pill" id="status">Stato: <b>pronto</b></span>
+      </div>
+    </header>
 
-<header>
-  <h1>News Watch (prova)</h1>
-  <button onclick="refresh()">Aggiorna</button>
-</header>
+    <div class="grid" id="grid"></div>
 
-<div class="container" id="content"></div>
+    <div class="hint">
+      <div><b>Nota:</b> questa versione usa un proxy Cloudflare Workers per aggirare CORS.</div>
+      <div class="small" style="margin-top:6px;">Proxy: <span style="font-family:var(--mono)">https://news-proxy.f-sormani-1985.workers.dev/?url=</span></div>
+    </div>
+  </div>
 
 <script>
-const sources = [
-  {
-    name: "Sea-Watch — News",
-    url: "https://sea-watch.org/en/news/"
-  },
-  {
-    name: "SOS Humanity — Press",
-    url: "https://sos-humanity.org/en/press/"
+(() => {
+  const PROXY = "https://news-proxy.f-sormani-1985.workers.dev/?url=";
+  const LS_KEY = "newsWatch:lastSeen:v2";
+
+  const SOURCES = [
+    { id:"sea-watch", name:"Sea-Watch — News", site:"sea-watch.org", url:"https://sea-watch.org/en/news/", parse: parseSeaWatch },
+    { id:"sos-humanity", name:"SOS Humanity — Press", site:"sos-humanity.org", url:"https://sos-humanity.org/en/press/", parse: parseSosHumanity }
+  ];
+
+  const elGrid = document.getElementById("grid");
+  const elStatus = document.getElementById("status");
+  document.getElementById("btnRefresh").addEventListener("click", refreshAll);
+  document.getElementById("btnReset").addEventListener("click", resetLocal);
+
+  function setStatus(kind, txt){
+    elStatus.innerHTML = `Stato: <b>${escapeHtml(txt)}</b>`;
+    elStatus.style.borderColor =
+      kind==="good" ? "rgba(39,209,123,.35)" :
+      kind==="warn" ? "rgba(255,204,102,.35)" :
+      kind==="bad"  ? "rgba(255,107,107,.35)" :
+      "rgba(255,255,255,.12)";
   }
-];
 
-async function refresh() {
-  const container = document.getElementById("content");
-  container.innerHTML = "";
+  function loadState(){
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }
+    catch { return {}; }
+  }
+  function saveState(s){ localStorage.setItem(LS_KEY, JSON.stringify(s)); }
 
-  for (const source of sources) {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `<h2>${source.name}</h2><div class="status">Caricamento...</div>`;
-    container.appendChild(card);
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[m]));
+  }
 
-    try {
-      const response = await fetch(source.url);
-      const text = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, "text/html");
+  async function fetchHtml(url){
+    const res = await fetch(PROXY + encodeURIComponent(url), { cache:"no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
+  }
 
-      const links = Array.from(doc.querySelectorAll("a"))
-        .map(a => ({
-          title: a.textContent.trim(),
-          href: a.href
-        }))
-        .filter(a => a.title.length > 20 && a.href.includes(source.url));
+  function render(){
+    elGrid.innerHTML = "";
+    const state = loadState();
 
-      card.innerHTML = `<h2>${source.name}</h2>`;
-
-      if (links.length === 0) {
-        card.innerHTML += `<div class="status">Nessuna news rilevata.</div>`;
-      } else {
-        links.slice(0,5).forEach(link => {
-          card.innerHTML += `
-            <div class="item">
-              <a href="${link.href}" target="_blank">${link.title}</a>
-            </div>
-          `;
-        });
-      }
-
-    } catch (err) {
-      card.innerHTML = `<h2>${source.name}</h2><div class="status">Errore di caricamento (probabile blocco CORS)</div>`;
+    for (const src of SOURCES){
+      const lastSeen = state[src.id]?.lastSeenUrl || null;
+      elGrid.appendChild(card(src, {status:"idle", lastSeenUrl:lastSeen, items:[], newCount:0, error:null, fetchedAt:null}));
     }
   }
-}
-</script>
 
+  function card(src, d){
+    const c = document.createElement("div");
+    c.className = "card";
+
+    const dotClass = d.status==="good" ? "dot good" : d.status==="warn" ? "dot warn" : d.status==="bad" ? "dot bad" : "dot";
+    const fetchedLabel = d.fetchedAt ? new Date(d.fetchedAt).toLocaleString("it-IT") : "—";
+    const lastShort = d.lastSeenUrl ? d.lastSeenUrl.replace(/^https?:\/\//,"") : "—";
+
+    const head = document.createElement("div");
+    head.className = "head";
+    head.innerHTML = `
+      <div>
+        <div class="name"><span class="${dotClass}"></span><span>${escapeHtml(src.name)}</span></div>
+        <div class="meta">
+          <span class="chip">Fonte: <strong>${escapeHtml(src.site)}</strong></span>
+          <span class="chip">Nuove: <strong>${d.newCount}</strong></span>
+          <span class="chip">Check: <strong>${escapeHtml(fetchedLabel)}</strong></span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="chip" href="${escapeHtml(src.url)}" target="_blank" rel="noopener noreferrer">Apri elenco</a>
+        <button class="secondary" data-action="read" data-id="${escapeHtml(src.id)}">Segna come letto</button>
+      </div>
+    `;
+
+    const list = document.createElement("div");
+    list.className = "list";
+
+    if (d.error){
+      list.innerHTML = `<div class="hint"><b style="color:var(--bad)">Errore:</b> ${escapeHtml(d.error)}</div>`;
+    } else if (!d.items.length){
+      list.innerHTML = `
+        <div class="hint">
+          Premi <b>Aggiorna</b>.
+          <div class="small" style="margin-top:8px;">Ultimo visto (locale): <span style="font-family:var(--mono)">${escapeHtml(lastShort)}</span></div>
+        </div>`;
+    } else {
+      for (const it of d.items.slice(0,5)){
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div class="top">
+            <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(it.title || it.url)}</a>
+            <div class="date">${escapeHtml(it.date || "")}</div>
+          </div>
+        `;
+        list.appendChild(div);
+      }
+      const hint = document.createElement("div");
+      hint.className = "hint";
+      hint.innerHTML = `<div class="small">Ultimo visto (locale): <span style="font-family:var(--mono)">${escapeHtml(lastShort)}</span></div>`;
+      list.appendChild(hint);
+    }
+
+    c.appendChild(head);
+    c.appendChild(list);
+    return c;
+  }
+
+  function replaceCard(srcId, node){
+    const idx = SOURCES.findIndex(s => s.id===srcId);
+    const old = elGrid.children[idx];
+    if (old) elGrid.replaceChild(node, old);
+  }
+
+  async function refreshAll(){
+    setStatus("warn","controllo…");
+    const state = loadState();
+
+    for (const src of SOURCES){
+      try{
+        const html = await fetchHtml(src.url);
+        const items = src.parse(html, src.url);
+
+        const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
+        let newCount = 0;
+
+        if (!lastSeenUrl){
+          newCount = 0; // prima volta: evitiamo falsi allarmi
+        } else {
+          for (const it of items){
+            if (it.url === lastSeenUrl) break;
+            newCount++;
+          }
+        }
+
+        const status = !lastSeenUrl ? "warn" : (newCount>0 ? "good" : "idle");
+        replaceCard(src.id, card(src, {status, lastSeenUrl, items, newCount, error:null, fetchedAt:Date.now()}));
+      } catch(e){
+        const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
+        replaceCard(src.id, card(src, {status:"bad", lastSeenUrl, items:[], newCount:0, error:String(e.message||e), fetchedAt:Date.now()}));
+      }
+    }
+
+    setStatus("good","ok");
+  }
+
+  async function markRead(id){
+    const src = SOURCES.find(s => s.id===id);
+    if (!src) return;
+
+    try{
+      setStatus("warn","salvo baseline…");
+      const html = await fetchHtml(src.url);
+      const items = src.parse(html, src.url);
+      const top = items[0]?.url;
+      if (!top) throw new Error("Nessun item trovato.");
+
+      const state = loadState();
+      state[src.id] = { lastSeenUrl: top, savedAt: Date.now() };
+      saveState(state);
+
+      replaceCard(src.id, card(src, {status:"good", lastSeenUrl:top, items, newCount:0, error:null, fetchedAt:Date.now()}));
+      setStatus("good","baseline salvata");
+    } catch(e){
+      setStatus("bad","errore baseline");
+      alert("Errore: " + (e.message||e));
+    }
+  }
+
+  function resetLocal(){
+    localStorage.removeItem(LS_KEY);
+    render();
+    setStatus("warn","storico locale cancellato");
+  }
+
+  // Click delegation
+  elGrid.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("button[data-action='read']");
+    if (!btn) return;
+    markRead(btn.getAttribute("data-id"));
+  });
+
+  // Parsers (minimi ma funzionanti)
+  function parseSeaWatch(html, baseUrl){
+    const doc = new DOMParser().parseFromString(html,"text/html");
+    const out = [];
+    // h3 > a tipico nella pagina news
+    const links = Array.from(doc.querySelectorAll("h3 a")).map(a => ({
+      title: (a.textContent||"").trim(),
+      url: new URL(a.getAttribute("href"), baseUrl).toString(),
+      node: a
+    })).filter(x => x.title && x.url && x.url !== baseUrl);
+
+    for (const x of links){
+      out.push({ title:x.title, url:x.url, date:"" });
+    }
+    return dedup(out).slice(0,12);
+  }
+
+  function parseSosHumanity(html, baseUrl){
+    const doc = new DOMParser().parseFromString(html,"text/html");
+    const out = [];
+    const as = Array.from(doc.querySelectorAll('a[href*="/en/press/"]'))
+      .filter(a => a.getAttribute("href") && !a.getAttribute("href").endsWith("/en/press/"));
+
+    for (const a of as){
+      const txt = (a.textContent||"").replace(/\\s+/g," ").trim();
+      const url = new URL(a.getAttribute("href"), baseUrl).toString();
+      const m = txt.match(/\\b(\\d{2}\\.\\d{2}\\.\\d{2})\\b/);
+      const date = m ? m[1] : "";
+      const title = txt.replace(/\\b\\d{2}\\.\\d{2}\\.\\d{2}\\b/g,"").trim() || url;
+      out.push({ title, url, date });
+    }
+    return dedup(out).slice(0,12);
+  }
+
+  function dedup(items){
+    const seen = new Set(); const out=[];
+    for (const it of items){
+      if (!it?.url) continue;
+      if (seen.has(it.url)) continue;
+      seen.add(it.url); out.push(it);
+    }
+    return out;
+  }
+
+  render();
+  setStatus("warn","premi Aggiorna");
+})();
+</script>
 </body>
 </html>
