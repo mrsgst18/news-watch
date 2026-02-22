@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>OSINT News Watch</title>
+  <title>ONG News Watch</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -206,7 +206,7 @@
 
     <header>
       <div>
-        <h1>OSINT News Watch</h1>
+        <h1>ONG News Watch</h1>
         <p>Monitoraggio open source: controlla comunicati/press/news di ONG e fonti pubbliche. Premi <b>Aggiorna</b> per vedere se c’è qualcosa di nuovo. Lo storico “ultimo visto” resta <b>in locale</b> nel tuo browser.</p>
       </div>
       <div class="tools">
@@ -383,6 +383,23 @@
     const res = await fetch(PROXY + encodeURIComponent(url), { cache:"no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.text();
+  }
+
+
+  function parseDateToMs(s){
+    const t = (s || "").trim();
+    if (!t) return null;
+    // First attempt: native parser (handles many RFC/ISO variants)
+    const ms = Date.parse(t);
+    if (!Number.isNaN(ms)) return ms;
+
+    // Second attempt: normalize common RFC822 timezone formats like "GMT" or "UT"
+    // and remove commas that sometimes confuse older parsers.
+    const norm = t.replace(/,/g,"").replace(/\bUT\b/i,"UTC").replace(/\bGMT\b/i,"UTC");
+    const ms2 = Date.parse(norm);
+    if (!Number.isNaN(ms2)) return ms2;
+
+    return null;
   }
 
   function uid(){
@@ -657,6 +674,19 @@
       const src = sources[i];
       try{
         const items = await fetchAndParse(src);
+        const from = elDateFrom?.value ? new Date(elDateFrom.value + "T00:00:00").getTime() : null;
+        const to = elDateTo?.value ? new Date(elDateTo.value + "T23:59:59").getTime() : null;
+        let filtered = items;
+        // Filtro "non distruttivo": se un item non ha una data valida, lo mostriamo comunque.
+        if (from || to) {
+          filtered = items.filter(it => {
+            const dr = it?.dateRaw;
+            if (dr === null || dr === undefined || Number.isNaN(dr)) return true;
+            if (from && dr < from) return false;
+            if (to && dr > to) return false;
+            return true;
+          });
+        }
         const range = getRangeMs();
         const filtered = filterByRange(items, range);
         const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
@@ -735,6 +765,19 @@
     for (const src of sources){
       try{
         const items = await fetchAndParse(src);
+        const from = elDateFrom?.value ? new Date(elDateFrom.value + "T00:00:00").getTime() : null;
+        const to = elDateTo?.value ? new Date(elDateTo.value + "T23:59:59").getTime() : null;
+        let filtered = items;
+        // Filtro "non distruttivo": se un item non ha una data valida, lo mostriamo comunque.
+        if (from || to) {
+          filtered = items.filter(it => {
+            const dr = it?.dateRaw;
+            if (dr === null || dr === undefined || Number.isNaN(dr)) return true;
+            if (from && dr < from) return false;
+            if (to && dr > to) return false;
+            return true;
+          });
+        }
         const top = items[0]?.url;
         if (top) state[src.id] = { lastSeenUrl: top, savedAt: Date.now() };
       } catch {}
