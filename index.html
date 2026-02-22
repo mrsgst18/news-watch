@@ -211,16 +211,6 @@
       </div>
       <div class="tools">
         <button id="btnSources" class="secondary" title="Apri configurazione fonti">⚙ Fonti</button>
-        <span class="pill" title="Intervallo temporale">
-          <span class="mini" style="margin-right:6px">Dal</span>
-          <input type="date" id="dateFrom" style="width:auto;min-width:140px;padding:8px 10px;border-radius:12px" />
-          <span class="mini" style="margin:0 6px">al</span>
-          <input type="date" id="dateTo" style="width:auto;min-width:140px;padding:8px 10px;border-radius:12px" />
-        </span>
-        <label class="pill" style="cursor:pointer" title="Nasconde le fonti che non hanno risultati nell'intervallo selezionato">
-          <input type="checkbox" id="chkHideEmpty" style="width:auto;margin:0" checked />
-          <span>Nascondi fonti vuote</span>
-        </label>
         <button id="btnRefresh">Aggiorna</button>
         <button id="btnReset" class="secondary" title="Cancella lo storico locale (ultimo visto)">Reset locale</button>
         <span class="pill" id="status">Stato: <b>pronto</b></span>
@@ -299,8 +289,6 @@
   const LS_KEY_LAST = "osintWatch:lastSeen:v3";
   const LS_KEY_SOURCES = "osintWatch:sources:v3";
   const LS_KEY_HIDE_ALERT = "osintWatch:hideAlert:v1";
-  const LS_KEY_FILTER = "osintWatch:filterRange:v1";
-  const LS_KEY_HIDE_EMPTY = "osintWatch:hideEmpty:v1";
 
   const elGrid = document.getElementById("grid");
   const elStatus = document.getElementById("status");
@@ -309,9 +297,6 @@
   const elAlertbar = document.getElementById("alertbar");
   const elAlerttext = document.getElementById("alerttext");
   const elTestOut = document.getElementById("testOut");
-  const elDateFrom = document.getElementById("dateFrom");
-  const elDateTo = document.getElementById("dateTo");
-  const elChkHideEmpty = document.getElementById("chkHideEmpty");
 
   const inName = document.getElementById("inName");
   const inUrl = document.getElementById("inUrl");
@@ -324,12 +309,6 @@
 
   document.getElementById("btnRefresh").addEventListener("click", refreshAll);
   document.getElementById("btnReset").addEventListener("click", resetLocal);
-  elDateFrom.addEventListener("change", saveFilterUI);
-  elDateTo.addEventListener("change", saveFilterUI);
-  elChkHideEmpty.addEventListener("change", () => {
-    localStorage.setItem(LS_KEY_HIDE_EMPTY, elChkHideEmpty.checked ? "1" : "0");
-    refreshAll();
-  });
   document.getElementById("btnAdd").addEventListener("click", addSourceFromUI);
   document.getElementById("btnTest").addEventListener("click", testSourceFromUI);
   document.getElementById("btnAddPreset").addEventListener("click", restorePresetSources);
@@ -385,23 +364,6 @@
     return await res.text();
   }
 
-
-  function parseDateToMs(s){
-    const t = (s || "").trim();
-    if (!t) return null;
-    // First attempt: native parser (handles many RFC/ISO variants)
-    const ms = Date.parse(t);
-    if (!Number.isNaN(ms)) return ms;
-
-    // Second attempt: normalize common RFC822 timezone formats like "GMT" or "UT"
-    // and remove commas that sometimes confuse older parsers.
-    const norm = t.replace(/,/g,"").replace(/\bUT\b/i,"UTC").replace(/\bGMT\b/i,"UTC");
-    const ms2 = Date.parse(norm);
-    if (!Number.isNaN(ms2)) return ms2;
-
-    return null;
-  }
-
   function uid(){
     return Math.random().toString(36).slice(2, 9) + "-" + Date.now().toString(36);
   }
@@ -432,50 +394,6 @@
 
   function loadLastSeen(){ return loadJSON(LS_KEY_LAST, {}); }
   function saveLastSeen(obj){ saveJSON(LS_KEY_LAST, obj); }
-
-  function todayISO(){
-    const d = new Date();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${d.getFullYear()}-${m}-${day}`;
-  }
-  function isoDaysAgo(n){
-    const d = new Date();
-    d.setDate(d.getDate() - n);
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${d.getFullYear()}-${m}-${day}`;
-  }
-  function saveFilterUI(){
-    const obj = { from: elDateFrom.value || "", to: elDateTo.value || "" };
-    saveJSON(LS_KEY_FILTER, obj);
-  }
-  function loadFilterUI(){
-    const saved = loadJSON(LS_KEY_FILTER, null);
-    const defTo = todayISO();
-    const defFrom = isoDaysAgo(7);
-    elDateTo.value = saved?.to || defTo;
-    elDateFrom.value = saved?.from || defFrom;
-
-    const he = localStorage.getItem(LS_KEY_HIDE_EMPTY);
-    elChkHideEmpty.checked = (he === null) ? true : (he === "1");
-    if (he === null) localStorage.setItem(LS_KEY_HIDE_EMPTY, "1");
-  }
-  function getRangeMs(){
-    const from = elDateFrom.value ? new Date(elDateFrom.value + "T00:00:00").getTime() : null;
-    const to = elDateTo.value ? new Date(elDateTo.value + "T23:59:59").getTime() : null;
-    return { from, to };
-  }
-  function filterByRange(items, range){
-    const {from, to} = range;
-    if (!from && !to) return items;
-    return items.filter(it => {
-      if (!it || !it.dateRaw) return false;
-      if (from && it.dateRaw < from) return false;
-      if (to && it.dateRaw > to) return false;
-      return true;
-    });
-  }
 
   function renderSourcesSidebar(){
     const sources = getSources();
@@ -587,7 +505,7 @@
       title: (a.textContent||"").trim(),
       url: new URL(a.getAttribute("href"), baseUrl).toString()
     })).filter(x => x.title && x.url && x.url !== baseUrl);
-    for (const x of links) out.push({ title:x.title, url:x.url, date:"", dateRaw:null });
+    for (const x of links) out.push({ title:x.title, url:x.url, date:"" });
     return dedup(out).slice(0, 20);
   }
 
@@ -602,7 +520,7 @@
       const m = txt.match(/\b(\d{2}\.\d{2}\.\d{2})\b/);
       const date = m ? m[1] : "";
       const title = txt.replace(/\b\d{2}\.\d{2}\.\d{2}\b/g,"").trim() || url;
-      out.push({ title, url, date, dateRaw:null });
+      out.push({ title, url, date });
     }
     return dedup(out).slice(0, 20);
   }
@@ -622,7 +540,7 @@
         if (u.toString() === baseUrl) continue;
         const p = u.pathname.toLowerCase();
         if (p.includes("/tag/") || p.includes("/category/") || p.includes("/author/")) continue;
-        out.push({ title:c.title, url:u.toString(), date:"", dateRaw:null });
+        out.push({ title:c.title, url:u.toString(), date:"" });
       } catch {}
     }
     return dedup(out).slice(0, 20);
@@ -638,7 +556,7 @@
         const link = (it.querySelector("link")?.textContent || "").trim();
         const pub = (it.querySelector("pubDate")?.textContent || "").trim();
         if (!link) continue;
-        out.push({ title: title || link, url: link, date: pub ? new Date(pub).toLocaleDateString("it-IT") : "", dateRaw: pub ? new Date(pub).getTime() : null });
+        out.push({ title: title || link, url: link, date: pub ? new Date(pub).toLocaleDateString("it-IT") : "" });
       }
       return dedup(out).slice(0, 20);
     }
@@ -649,7 +567,7 @@
       const href = linkEl?.getAttribute("href") || "";
       const upd = (e.querySelector("updated")?.textContent || e.querySelector("published")?.textContent || "").trim();
       if (!href) continue;
-      out.push({ title: title || href, url: href, date: upd ? new Date(upd).toLocaleDateString("it-IT") : "", dateRaw: upd ? new Date(upd).getTime() : null });
+      out.push({ title: title || href, url: href, date: upd ? new Date(upd).toLocaleDateString("it-IT") : "" });
     }
     return dedup(out).slice(0, 20);
   }
@@ -674,26 +592,11 @@
       const src = sources[i];
       try{
         const items = await fetchAndParse(src);
-        const from = elDateFrom?.value ? new Date(elDateFrom.value + "T00:00:00").getTime() : null;
-        const to = elDateTo?.value ? new Date(elDateTo.value + "T23:59:59").getTime() : null;
-        let filtered = items;
-        // Filtro "non distruttivo": se un item non ha una data valida, lo mostriamo comunque.
-        if (from || to) {
-          filtered = items.filter(it => {
-            const dr = it?.dateRaw;
-            if (dr === null || dr === undefined || Number.isNaN(dr)) return true;
-            if (from && dr < from) return false;
-            if (to && dr > to) return false;
-            return true;
-          });
-        }
-        const range = getRangeMs();
-        const filtered = filterByRange(items, range);
         const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
         let newCount = 0;
 
         if (lastSeenUrl){
-          for (const it of filtered){
+          for (const it of items){
             if (it.url === lastSeenUrl) break;
             newCount++;
           }
@@ -703,22 +606,10 @@
         if (newCount>0) newBySource.push({ name: src.name, n: newCount });
 
         const status = !lastSeenUrl ? "warn" : (newCount>0 ? "good" : "idle");
-        replaceCardByIndex(i, card(src, {status, lastSeenUrl, items: filtered, newCount, error:null, fetchedAt:Date.now()}));
-        const hideEmpty = localStorage.getItem(LS_KEY_HIDE_EMPTY) !== "0";
-        if (hideEmpty && filtered.length === 0) {
-          const node = elGrid.children[i];
-          if (node) node.style.display = "none";
-        } else {
-          const node = elGrid.children[i];
-          if (node) node.style.display = "";
-        }
-
+        replaceCardByIndex(i, card(src, {status, lastSeenUrl, items, newCount, error:null, fetchedAt:Date.now()}));
       } catch(e){
         const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
         replaceCardByIndex(i, card(src, {status:"bad", lastSeenUrl, items:[], newCount:0, error:String(e.message||e), fetchedAt:Date.now()}));
-        const node = elGrid.children[i];
-        if (node) node.style.display = "";
-
       }
     }
 
@@ -765,19 +656,6 @@
     for (const src of sources){
       try{
         const items = await fetchAndParse(src);
-        const from = elDateFrom?.value ? new Date(elDateFrom.value + "T00:00:00").getTime() : null;
-        const to = elDateTo?.value ? new Date(elDateTo.value + "T23:59:59").getTime() : null;
-        let filtered = items;
-        // Filtro "non distruttivo": se un item non ha una data valida, lo mostriamo comunque.
-        if (from || to) {
-          filtered = items.filter(it => {
-            const dr = it?.dateRaw;
-            if (dr === null || dr === undefined || Number.isNaN(dr)) return true;
-            if (from && dr < from) return false;
-            if (to && dr > to) return false;
-            return true;
-          });
-        }
         const top = items[0]?.url;
         if (top) state[src.id] = { lastSeenUrl: top, savedAt: Date.now() };
       } catch {}
@@ -880,7 +758,6 @@
     }
   });
 
-  loadFilterUI();
   renderSourcesSidebar();
   renderCardsSkeleton();
   setStatus("warn","premi Aggiorna");
