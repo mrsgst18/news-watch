@@ -211,6 +211,10 @@
       </div>
       <div class="tools">
         <button id="btnSources" class="secondary" title="Apri configurazione fonti">⚙ Fonti</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);">
+          <input type="checkbox" id="chkHideEmpty" />
+          Nascondi fonti vuote
+        </label>
         <button id="btnRefresh">Aggiorna</button>
         <button id="btnReset" class="secondary" title="Cancella lo storico locale (ultimo visto)">Reset locale</button>
         <span class="pill" id="status">Stato: <b>pronto</b></span>
@@ -289,6 +293,7 @@
   const LS_KEY_LAST = "osintWatch:lastSeen:v3";
   const LS_KEY_SOURCES = "osintWatch:sources:v3";
   const LS_KEY_HIDE_ALERT = "osintWatch:hideAlert:v1";
+  const LS_KEY_HIDE_EMPTY = "osintWatch:hideEmpty:v1";
 
   const elGrid = document.getElementById("grid");
   const elStatus = document.getElementById("status");
@@ -297,6 +302,7 @@
   const elAlertbar = document.getElementById("alertbar");
   const elAlerttext = document.getElementById("alerttext");
   const elTestOut = document.getElementById("testOut");
+  const elChkHideEmpty = document.getElementById("chkHideEmpty");
 
   const inName = document.getElementById("inName");
   const inUrl = document.getElementById("inUrl");
@@ -306,6 +312,16 @@
   const elOverlay = document.getElementById("overlay");
 
   elProxyLabel.textContent = PROXY;
+
+  // Preferenza UI: nascondi fonti vuote
+  try{
+    elChkHideEmpty.checked = localStorage.getItem(LS_KEY_HIDE_EMPTY) === "1";
+  } catch {}
+  elChkHideEmpty.addEventListener("change", () => {
+    localStorage.setItem(LS_KEY_HIDE_EMPTY, elChkHideEmpty.checked ? "1" : "0");
+    // Applica subito alla vista corrente senza rifare fetch
+    applyHideEmptyToExistingCards();
+  });
 
   document.getElementById("btnRefresh").addEventListener("click", refreshAll);
   document.getElementById("btnReset").addEventListener("click", resetLocal);
@@ -428,6 +444,7 @@
   function card(src, d){
     const c = document.createElement("div");
     c.className = "card" + (d.newCount>0 ? " alert" : "");
+    c.setAttribute("data-itemcount", String((d.items||[]).length));
     const dotClass = d.status==="good" ? "dot good" : d.status==="warn" ? "dot warn" : d.status==="bad" ? "dot bad" : "dot";
     const fetchedLabel = d.fetchedAt ? new Date(d.fetchedAt).toLocaleString("it-IT") : "—";
     const lastShort = d.lastSeenUrl ? d.lastSeenUrl.replace(/^https?:\/\//,"") : "—";
@@ -481,6 +498,18 @@
     c.appendChild(head);
     c.appendChild(list);
     return c;
+  }
+
+
+  function applyHideEmptyToExistingCards(){
+    const hideEmpty = elChkHideEmpty?.checked;
+    const cards = Array.from(elGrid.children);
+    for (const c of cards){
+      // Marker: set by refreshAll when we know item count
+      const cnt = Number(c.getAttribute("data-itemcount") || "0");
+      if (hideEmpty && cnt === 0) c.style.display = "none";
+      else c.style.display = "";
+    }
   }
 
   function replaceCardByIndex(index, node){
@@ -606,10 +635,16 @@
         if (newCount>0) newBySource.push({ name: src.name, n: newCount });
 
         const status = !lastSeenUrl ? "warn" : (newCount>0 ? "good" : "idle");
-        replaceCardByIndex(i, card(src, {status, lastSeenUrl, items, newCount, error:null, fetchedAt:Date.now()}));
+        const node = card(src, {status, lastSeenUrl, items, newCount, error:null, fetchedAt:Date.now()});
+        replaceCardByIndex(i, node);
+        // Nascondi fonti vuote (solo UI)
+        if (elChkHideEmpty?.checked && items.length === 0) node.style.display = "none";
+        else node.style.display = "";
       } catch(e){
         const lastSeenUrl = state[src.id]?.lastSeenUrl || null;
-        replaceCardByIndex(i, card(src, {status:"bad", lastSeenUrl, items:[], newCount:0, error:String(e.message||e), fetchedAt:Date.now()}));
+        const node = card(src, {status:"bad", lastSeenUrl, items:[], newCount:0, error:String(e.message||e), fetchedAt:Date.now()});
+        replaceCardByIndex(i, node);
+        node.style.display = ""; // gli errori devono restare visibili
       }
     }
 
@@ -671,6 +706,7 @@
     localStorage.removeItem(LS_KEY_LAST);
     localStorage.removeItem(LS_KEY_HIDE_ALERT);
     renderCardsSkeleton();
+    applyHideEmptyToExistingCards();
     setStatus("warn","storico locale cancellato");
   }
 
@@ -679,6 +715,7 @@
     setSources(p);
     renderSourcesSidebar();
     renderCardsSkeleton();
+    applyHideEmptyToExistingCards();
     setStatus("warn","preset ripristinato");
   }
 
@@ -693,6 +730,7 @@
     inName.value = ""; inUrl.value = ""; inType.value = "rss";
     renderSourcesSidebar();
     renderCardsSkeleton();
+    applyHideEmptyToExistingCards();
     setStatus("good","fonte aggiunta");
   }
 
@@ -735,6 +773,7 @@
       saveLastSeen(st);
       renderSourcesSidebar();
       renderCardsSkeleton();
+      applyHideEmptyToExistingCards();
       setStatus("warn","fonte rimossa");
       return;
     }
@@ -754,12 +793,14 @@
       setSources(sources);
       renderSourcesSidebar();
       renderCardsSkeleton();
+      applyHideEmptyToExistingCards();
       setStatus("good","fonte aggiornata");
     }
   });
 
   renderSourcesSidebar();
   renderCardsSkeleton();
+  applyHideEmptyToExistingCards();
   setStatus("warn","premi Aggiorna");
 })();
 </script>
