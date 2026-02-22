@@ -50,8 +50,6 @@
       background:rgba(255,255,255,.05);color:var(--muted);font-size:13px;
     }
     .pill b{color:var(--text)}
-    .layout{display:grid;grid-template-columns:1fr;gap:14px;align-items:start;}
-    @media(min-width:980px){.layout{grid-template-columns:340px 1fr;}}
     .panel{
       border:1px solid var(--stroke);
       background:linear-gradient(180deg, var(--panel), rgba(255,255,255,.03));
@@ -63,7 +61,7 @@
     .panel .ph h2{margin:0;font-size:14px;letter-spacing:.2px}
     .panel .ph .sub{margin-top:6px;color:var(--muted);font-size:12.5px;line-height:1.35}
     .panel .pc{padding:12px 14px 14px}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px;}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;align-items:start;}
     @media(min-width:860px){.grid{grid-template-columns:1fr 1fr;}}
     .card{
       border:1px solid var(--stroke);
@@ -103,6 +101,8 @@
       border:1px dashed rgba(255,255,255,.18);border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03)
     }
     .small{font-size:12px;color:var(--muted);line-height:1.45}
+
+    /* ALERT BAR */
     .alertbar{
       display:none;
       position:sticky; top:0; z-index:50;
@@ -125,6 +125,8 @@
     }
     @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
     .alertbar b{letter-spacing:.2px}
+
+    /* FORMS */
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
     label{font-size:12.5px;color:var(--muted)}
     input,select,textarea{
@@ -152,10 +154,42 @@
     .srcMeta{font-family:var(--mono);font-size:11.5px;color:var(--muted);word-break:break-all}
     .srcBtns{display:flex;gap:8px;flex-wrap:wrap}
     .srcBtns button{padding:8px 10px;border-radius:12px;font-weight:900}
+
+    /* DRAWER (Fonti) */
+    .overlay{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(3px);
+      display:none;
+      z-index:80;
+    }
+    .overlay.on{display:block;}
+    .drawer{
+      position:fixed;
+      top:0; left:0;
+      width:min(420px, 92vw);
+      height:100vh;
+      padding:14px 14px 18px;
+      transform:translateX(-105%);
+      transition:transform .22s ease;
+      z-index:90;
+      overflow:auto;
+    }
+    .drawer.on{transform:translateX(0);}
+    .drawerHeader{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin-bottom:10px;
+    }
+    .drawerHeader .title{
+      display:flex;gap:10px;align-items:center;
+      font-weight:1000; letter-spacing:.2px;
+    }
+    .kbd{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid rgba(255,255,255,.14);padding:3px 8px;border-radius:10px;background:rgba(0,0,0,.18)}
   </style>
 </head>
 <body>
   <div class="wrap">
+
     <div id="alertbar" class="alertbar">
       <div class="left">
         <div class="siren">⚠️</div>
@@ -176,63 +210,77 @@
         <p>Monitoraggio open source: controlla comunicati/press/news di ONG e fonti pubbliche. Premi <b>Aggiorna</b> per vedere se c’è qualcosa di nuovo. Lo storico “ultimo visto” resta <b>in locale</b> nel tuo browser.</p>
       </div>
       <div class="tools">
+        <button id="btnSources" class="secondary" title="Apri configurazione fonti">⚙ Fonti</button>
         <button id="btnRefresh">Aggiorna</button>
         <button id="btnReset" class="secondary" title="Cancella lo storico locale (ultimo visto)">Reset locale</button>
         <span class="pill" id="status">Stato: <b>pronto</b></span>
       </div>
     </header>
 
-    <div class="layout">
-      <div class="panel">
-        <div class="ph">
-          <div>
-            <h2>Fonti</h2>
-            <div class="sub">Puoi aggiungere fonti (meglio RSS quando disponibile). Le fonti vengono salvate in locale.</div>
-          </div>
-          <button id="btnAddPreset" class="secondary" title="Ripristina lista predefinita">Preset</button>
-        </div>
-        <div class="pc">
-          <div class="sourcesList" id="sourcesList"></div>
+    <div class="grid" id="grid"></div>
 
-          <div class="hint" style="margin-top:12px">
-            <div style="font-weight:900;margin-bottom:6px">Aggiungi fonte</div>
-            <div class="row">
-              <div style="flex:1;min-width:140px">
-                <label>Nome</label>
-                <input id="inName" placeholder="Es. Mediterranea Saving Humans" />
-              </div>
-              <div style="flex:1;min-width:140px">
-                <label>Tipo</label>
-                <select id="inType">
-                  <option value="rss">RSS/Atom</option>
-                  <option value="html-seawatch">HTML (Sea-Watch style)</option>
-                  <option value="html-sos">HTML (SOS Humanity style)</option>
-                  <option value="html-generic">HTML (generico: link interni)</option>
-                </select>
-              </div>
-            </div>
-            <div style="margin-top:10px">
-              <label>URL</label>
-              <input id="inUrl" placeholder="https://… (feed RSS o pagina elenco)" />
-              <div class="mini" style="margin-top:6px">Consiglio OSINT: se hai un feed RSS, usa quello. È più stabile del parsing HTML.</div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <button id="btnAdd">Aggiungi</button>
-              <button id="btnTest" class="secondary">Test rapido</button>
-            </div>
-            <div class="mini" id="testOut" style="margin-top:8px"></div>
-          </div>
-
-          <div class="hint" style="margin-top:12px">
-            <div><b>Proxy (Workers):</b></div>
-            <div class="small" style="margin-top:6px;font-family:var(--mono)" id="proxyLabel"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid" id="grid"></div>
+    <div class="hint" style="margin-top:14px">
+      <div><b>Proxy (Workers):</b> <span class="kbd">anti-CORS</span></div>
+      <div class="small" style="margin-top:6px;font-family:var(--mono)" id="proxyLabel"></div>
     </div>
   </div>
+
+  <div id="overlay" class="overlay" aria-hidden="true"></div>
+
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawerHeader">
+      <div class="title">⚙ Fonti <span class="kbd">Esc</span></div>
+      <div class="tools">
+        <button id="btnCloseDrawer" class="secondary">Chiudi</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ph">
+        <div>
+          <h2>Fonti</h2>
+          <div class="sub">Aggiungi fonti (meglio RSS quando disponibile). Le fonti vengono salvate in locale.</div>
+        </div>
+        <button id="btnAddPreset" class="secondary" title="Ripristina lista predefinita">Preset</button>
+      </div>
+      <div class="pc">
+        <div class="sourcesList" id="sourcesList"></div>
+
+        <div class="hint" style="margin-top:12px">
+          <div style="font-weight:900;margin-bottom:6px">Aggiungi fonte</div>
+          <div class="row">
+            <div style="flex:1;min-width:140px">
+              <label>Nome</label>
+              <input id="inName" placeholder="Es. Mediterranea Saving Humans" />
+            </div>
+            <div style="flex:1;min-width:140px">
+              <label>Tipo</label>
+              <select id="inType">
+                <option value="rss">RSS/Atom</option>
+                <option value="html-seawatch">HTML (Sea-Watch style)</option>
+                <option value="html-sos">HTML (SOS Humanity style)</option>
+                <option value="html-generic">HTML (generico: link interni)</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label>URL</label>
+            <input id="inUrl" placeholder="https://… (feed RSS o pagina elenco)" />
+            <div class="mini" style="margin-top:6px">Consiglio OSINT: se hai un feed RSS, usa quello. È più stabile del parsing HTML.</div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button id="btnAdd">Aggiungi</button>
+            <button id="btnTest" class="secondary">Test rapido</button>
+          </div>
+          <div class="mini" id="testOut" style="margin-top:8px"></div>
+        </div>
+
+        <div class="hint" style="margin-top:12px">
+          <div class="small"><b>Nota:</b> questo è un progetto OSINT “leggero”. Alcuni siti cambiano HTML spesso: quando possibile usa RSS/Atom.</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
 <script>
 (() => {
@@ -254,6 +302,9 @@
   const inUrl = document.getElementById("inUrl");
   const inType = document.getElementById("inType");
 
+  const elDrawer = document.getElementById("drawer");
+  const elOverlay = document.getElementById("overlay");
+
   elProxyLabel.textContent = PROXY;
 
   document.getElementById("btnRefresh").addEventListener("click", refreshAll);
@@ -266,6 +317,25 @@
     elAlertbar.classList.remove("on");
   });
   document.getElementById("btnMarkAll").addEventListener("click", markAllRead);
+
+  // Drawer controls
+  document.getElementById("btnSources").addEventListener("click", openDrawer);
+  document.getElementById("btnCloseDrawer").addEventListener("click", closeDrawer);
+  elOverlay.addEventListener("click", closeDrawer);
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+
+  function openDrawer(){
+    elOverlay.classList.add("on");
+    elDrawer.classList.add("on");
+    elOverlay.setAttribute("aria-hidden","false");
+    elDrawer.setAttribute("aria-hidden","false");
+  }
+  function closeDrawer(){
+    elOverlay.classList.remove("on");
+    elDrawer.classList.remove("on");
+    elOverlay.setAttribute("aria-hidden","true");
+    elDrawer.setAttribute("aria-hidden","true");
+  }
 
   function setStatus(kind, txt){
     elStatus.innerHTML = `Stato: <b>${escapeHtml(txt)}</b>`;
