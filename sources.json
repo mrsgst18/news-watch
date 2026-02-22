@@ -1,0 +1,22 @@
+[
+  {"id":"sea-watch","name":"SEA-WATCH","type":"html-seawatch","url":"https://sea-watch.org/en/news/"},
+  {"id":"sos-humanity","name":"SOS HUMANITY","type":"html-sos","url":"https://sos-humanity.org/en/press/"},
+  {"id":"openarms","name":"OPENARMS NEWS","type":"html-generic","url":"https://www.openarms.es/en/news/"},
+  {"id":"seaeye","name":"SEA-EYE NEWS","type":"html-generic","url":"https://sea-eye.org/en/news/"},
+  {"id":"sosmed","name":"OCEAN VIKING NEWS","type":"html-generic","url":"https://www.sosmediterranee.org/latest-news/"},
+  {"id":"yed4fg3-mlxs4mm4","name":"AURORA SAR NEWS","type":"rss","url":"https://aurorasupport.org/news/"},
+  {"id":"0f3w0p-mlxs73b1","name":"AURORA SAR REPORTS","type":"rss","url":"https://aurorasupport.org/reports/"},
+  {"id":"al0use","name":"LOUISE MICHEL","type":"rss","url":"https://www.louise-michel.org/press/"},
+  {"id":"mhchyn2-mlxs8bjs","name":"MALDUSA NEWS","type":"rss","url":"https://www.maldusa.org/en/events/"},
+  {"id":"uuvhe4b-mlxsctts","name":"MEDITERRANEA","type":"rss","url":"https://mediterranearescue.org/it/news"},
+  {"id":"7fqjdoc-mlxsd8ch","name":"MY SARAH","type":"rss","url":"https://sarah-searescuetrung.org/news/"},
+  {"id":"autelf5-mlxse260","name":"OPEN ARMS EVENTS","type":"rss","url":"https://www.openarms.es/en/current-events"},
+  {"id":"zzgkk9g-mlxser81","name":"OPEN ARMS PRESS","type":"rss","url":"https://www.openarms.es/en/press"},
+  {"id":"i33w98-mlxsf520","name":"RESQ PEOPLE","type":"rss","url":"https://resq.it/news/"},
+  {"id":"ohjr15i-mlxsgjo2","name":"RESQSHIP NEWS","type":"rss","url":"https://resqship.org/category/news-en/"},
+  {"id":"tkv4uu-mlxsgxbv","name":"RESQSHIP REPORTS","type":"rss","url":"https://resqship.org/en/category/mission-reports/"},
+  {"id":"15cmae1-mlxsh8f5","name":"SAFEFUR","type":"rss","url":"https://seapunks.de/en/news/"},
+  {"id":"5mlxsio1t","name":"MSF SHIPS","type":"rss","url":"https://searchandrescue.msf.org/news/"},
+  {"id":"68lxa6e5-mlxsiuex","name":"UNITED4RESCUE BLOG","type":"rss","url":"https://united4rescue.org/it/blog/"},
+  {"id":"2z9ah58-mlxsj7j6","name":"UNITED4RESCUE PRESS","type":"rss","url":"https://united4rescue.org/it/stampa/comunicati-stampa/"}
+]
